@@ -35,7 +35,8 @@ python = ">=3.8,<4.0"
 pillow = "*"
 onnxruntime = "*"
 loguru = "*"
-blake3 = "^0.4.1"
+blake3 = "*"
+platformdirs = "*"
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
