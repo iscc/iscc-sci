@@ -50,20 +50,21 @@ iscc-samples = "*"
 
 [tool.poetry.group.dev.dependencies]
 poethepoet = "*"
-black = "*"
+ruff = "*"
 
 [tool.poetry.group.docs.dependencies]
 mdformat-gfm = "*"
 mdformat-gfm-alerts = "*"
 mdformat-frontmatter = "*"
 
-[tool.black]
-skip-string-normalization = false
+[tool.ruff]
 line-length = 100
-target-version = ['py39']
+
+[tool.ruff.format]
+line-ending = "lf"
 
 [tool.poe.tasks]
-format-code = { cmd = "poetry run black .", help = "Code style formating with black" }
+format-code = { cmd = "ruff format", help = "Code style formating with ruff" }
 format-md = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help = "Markdown formating with mdformat" }
 test = { cmd = "pytest --cov=iscc_sci --cov-fail-under=100", help = "Run tests with coverage" }
 all = ["format-code", "format-md", "test"]
