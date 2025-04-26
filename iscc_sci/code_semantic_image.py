@@ -158,7 +158,7 @@ def remove_transparency(image):
         else:
             return image.convert("RGB")
     else:
-        # Other modes, simply convert to RGB
+        # All other modes
         return image.convert("RGB")
 
 
