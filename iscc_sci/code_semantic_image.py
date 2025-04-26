@@ -80,7 +80,7 @@ def gen_image_code_semantic(arr, bits=64):
 def soft_hash_image_semantic(arr, bits=64):
     # type: (NDArray[np.float32], int) -> Tuple[bytes, NDArray[np.float32]]
     """
-    Calculate semantic image hash from preprocessed image array.
+    Calculate semantic image hash from a preprocessed image array.
 
     :param NDArray[np.float32] arr: Preprocessed image array
     :param int bits: Bit-length of semantic image hash (default 64).
@@ -109,7 +109,6 @@ def preprocess_image(image):
     # type: (Image.Image) -> NDArray[np.float32]
     """Preprocess image for inference."""
     with sci.metrics(name="Image preprocessing time {seconds:.4f} seconds"):
-
         # Transpose the image according to its orientation tag (if available).
         image = ImageOps.exif_transpose(image)
 
