@@ -4,7 +4,7 @@ from iscc_samples import images
 
 
 def test_version():
-    assert sci.__version__ == "0.1.0"
+    assert sci.__version__ == "0.2.0"
 
 
 def test_code_image_semantic_default():

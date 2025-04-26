@@ -3,7 +3,7 @@
 import os
 from platformdirs import PlatformDirs
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 APP_NAME = "iscc-sci"
 APP_AUTHOR = "iscc"
 dirs = PlatformDirs(appname=APP_NAME, appauthor=APP_AUTHOR)

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "iscc-sci"
-version = "0.1.0"
+version = "0.2.0"
 description = "ISCC - Semantic Code Image"
 authors = ["Titusz <tp@py7.de>"]
 license = "Apache-2.0"
@@ -16,11 +16,11 @@ classifiers=[
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Cython",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Scientific/Engineering :: Image Recognition",
@@ -31,12 +31,16 @@ classifiers=[
 
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">=3.9,<4.0"
 pillow = "*"
 onnxruntime = "*"
+onnxruntime-gpu = { version = "*", optional = true }
 loguru = "*"
 blake3 = "*"
 platformdirs = "*"
+
+[tool.poetry.extras]
+gpu = ["onnxruntime-gpu"]
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
@@ -45,8 +49,6 @@ iscc-samples = "*"
 [tool.poetry.group.dev.dependencies]
 poethepoet = "*"
 black = "*"
-onnx = "*"
-twine = "*"
 
 [tool.poetry.group.docs.dependencies]
 mdformat-gfm = "*"
@@ -54,7 +56,7 @@ mdformat-gfm = "*"
 [tool.black]
 skip-string-normalization = false
 line-length = 100
-target-version = ['py38']
+target-version = ['py39']
 
 [tool.poe.tasks]
 format-code = { cmd = "poetry run black .", help = "Code style formating with black" }

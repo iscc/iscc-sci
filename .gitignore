@@ -6,3 +6,4 @@ site
 __pycache__
 .coverage
 coverage.xml
+.aider*
