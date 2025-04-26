@@ -44,6 +44,8 @@ gpu = ["onnxruntime-gpu"]
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
+coverage = "*"
+pytest-cov = "*"
 iscc-samples = "*"
 
 [tool.poetry.group.dev.dependencies]
@@ -61,7 +63,7 @@ target-version = ['py39']
 [tool.poe.tasks]
 format-code = { cmd = "poetry run black .", help = "Code style formating with black" }
 format-md = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help = "Markdown formating with mdformat" }
-test = { cmd = "poetry run pytest", help = "Run tests" }
+test = { cmd = "pytest --cov=iscc_sci --cov-fail-under=100", help = "Run tests with coverage" }
 all = ["format-code", "format-md", "test"]
 
 [build-system]

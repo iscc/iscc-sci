@@ -31,7 +31,7 @@ def metrics(name):
     log.debug(name.format(seconds=duration))
 
 
-def get_model():
+def get_model():  # pragma: no cover
     """Check and return local model file if it exists, otherwise download."""
     if MODEL_PATH.exists():
         try:

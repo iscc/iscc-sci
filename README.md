@@ -1,5 +1,6 @@
 # ISCC - Semantic Image-Code
 
+[![Tests](https://github.com/iscc/iscc-sci/actions/workflows/tests.yml/badge.svg)](https://github.com/iscc/iscc-sci/actions/workflows/tests.yml)
 [![Version](https://img.shields.io/pypi/v/iscc-sci.svg)](https://pypi.python.org/pypi/iscc-sci/)
 [![Downloads](https://pepy.tech/badge/iscc-sci)](https://pepy.tech/project/iscc-sci)
 

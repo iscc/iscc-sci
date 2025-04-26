@@ -1,9 +1,10 @@
 """ISCC - Semantic-Code Image."""
 
 import os
+from importlib import metadata
 from platformdirs import PlatformDirs
 
-__version__ = "0.2.0"
+__version__ = metadata.version("iscc-sci")
 APP_NAME = "iscc-sci"
 APP_AUTHOR = "iscc"
 dirs = PlatformDirs(appname=APP_NAME, appauthor=APP_AUTHOR)

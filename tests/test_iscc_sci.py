@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import iscc_sci as sci
 from iscc_samples import images
 
@@ -20,6 +21,23 @@ def test_code_image_semantic_256bit():
 def test_gen_image_code_semantic(img_array):
     result = sci.gen_image_code_semantic(img_array)
     assert result["iscc"] == "ISCC:CEAQ2WTPK2QPZTK4"
+
+
+def test_gen_image_code_semantic_invalid_shape():
+    # Create an array with invalid shape
+    invalid_array = np.zeros((1, 3, 256, 256), dtype=np.float32)
+    with pytest.raises(ValueError, match="Array must have shape"):
+        sci.gen_image_code_semantic(invalid_array)
+
+
+def test_gen_image_code_semantic_invalid_bits():
+    # Test with invalid bit length (not multiple of 32)
+    with pytest.raises(ValueError, match="Invalid bitlength"):
+        sci.gen_image_code_semantic(np.zeros((1, 3, 512, 512), dtype=np.float32), bits=33)
+
+    # Test with invalid bit length (less than 32)
+    with pytest.raises(ValueError, match="Invalid bitlength"):
+        sci.gen_image_code_semantic(np.zeros((1, 3, 512, 512), dtype=np.float32), bits=16)
 
 
 def test_models():
