@@ -53,7 +53,10 @@ poethepoet = "*"
 black = "*"
 
 [tool.poetry.group.docs.dependencies]
+mdformat = "*"
 mdformat-gfm = "*"
+mdformat_admon = "*"
+mdformat_tables = "*"
 
 [tool.black]
 skip-string-normalization = false
