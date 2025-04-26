@@ -8,8 +8,11 @@
 [ISCC](https://core.iscc.codes) (*International Standard Content Code*). Semantic Image-Codes are
 designed to capture and represent the semantic content of images for improved similarity detection.
 
-> [!CAUTION] This is an early proof of concept. All releases with release numbers below v1.0.0 may
-> break backward compatibility and produce incompatible Semantic Image-Codes.
+> [!CAUTION]
+> **This is a proof of concept.** All releases with version numbers below v1.0.0 may break backward
+> compatibility and produce incompatible Semantic Image-Codes. The algorithms of this `iscc-sci`
+> repository are experimental and not part of the official
+> [ISO 24138:2024](https://www.iso.org/standard/77899.html) standard.
 
 ## What is ISCC Semantic Image-Code
 
