@@ -28,7 +28,8 @@ classifiers=[
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-
+[tool.poetry.scripts]
+sci = 'iscc_sci.cli:main'
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"

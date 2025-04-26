@@ -2,7 +2,7 @@ from loguru import logger as log
 from base64 import b32encode
 from pathlib import Path
 from typing import List, Tuple
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 import onnxruntime as rt
 from numpy.typing import NDArray
@@ -108,6 +108,9 @@ def preprocess_image(image):
     # type: (Image.Image) -> NDArray[np.float32]
     """Preprocess image for inference."""
     with sci.metrics(name="Image preprocessing time {seconds:.4f} seconds"):
+        # Transpose the image according to its orientation tag (if available).
+        image = ImageOps.exif_transpose(image)
+
         # Resize the image
         image = image.resize((512, 512), Image.BILINEAR)
         # Convert to RGB
