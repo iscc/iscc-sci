@@ -1,8 +1,9 @@
+from PIL.Image import Resampling
 from loguru import logger as log
 from base64 import b32encode
 from pathlib import Path
 from typing import List, Tuple
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageChops
 import numpy as np
 import onnxruntime as rt
 from numpy.typing import NDArray
@@ -108,16 +109,19 @@ def preprocess_image(image):
     # type: (Image.Image) -> NDArray[np.float32]
     """Preprocess image for inference."""
     with sci.metrics(name="Image preprocessing time {seconds:.4f} seconds"):
+        # Resize the image
+        image = image.resize((512, 512), Resampling.BILINEAR)
+
         # Transpose the image according to its orientation tag (if available).
         image = ImageOps.exif_transpose(image)
 
-        # Resize the image
-        image = image.resize((512, 512), Image.BILINEAR)
-        # Convert to RGB
-        if image.mode != "RGB":
-            image = image.convert("RGB")
+        # Convert to RGB and add a white background if the image contains transparency.
+        image = remove_transparency(image)
 
-        # Convert to numpy array and ensure type consistency
+        # Crop uniformly colored borders if applicable.
+        image = trim_border(image)
+
+        # Convert to a numpy array and ensure type consistency
         image = np.array(image, dtype=np.float32)
 
         # Rescale and Normalize
@@ -126,10 +130,56 @@ def preprocess_image(image):
         std = np.array([0.5, 0.5, 0.5], dtype=np.float32)
         image = (image - mean) / std
 
-        # Change the order of dimensions to CHW and add batch dimension
+        # Change the order of dimensions to CHW and add a batch dimension
         image = np.expand_dims(np.transpose(image, (2, 0, 1)), axis=0)
 
     return image.astype(np.float32)
+
+
+def remove_transparency(image):
+    # type: (Image.Image) -> Image.Image
+    """Replace eventual transparency with a white background and return an RGB image."""
+    white = (255, 255, 255)
+    # Handle palette-based transparency explicitly
+    if image.mode in ("RGBA", "LA"):
+        # Direct alpha transparency
+        log.debug("Whitening alpha transparency")
+        background = Image.new("RGB", image.size, white)
+        background.paste(image, mask=image.getchannel("A"))
+        return background
+    elif image.mode == "P":
+        # Convert P images with transparency to RGBA first
+        if "transparency" in image.info:
+            log.debug("Whitening palette transparency")
+            image = image.convert("RGBA")
+            background = Image.new("RGB", image.size, white)
+            background.paste(image, mask=image.getchannel("A"))
+            return background
+        else:
+            return image.convert("RGB")
+    else:
+        # Other modes, simply convert to RGB
+        return image.convert("RGB")
+
+
+def trim_border(img):
+    # type: (Image.Image) -> Image.Image
+    """Trim uniform-colored (empty) border.
+
+    Takes the upper left pixel as a reference for border color.
+
+    :param img: Pillow Image Object
+    :return: Image with a uniform colored (empty) border removed.
+    """
+
+    bg = Image.new(img.mode, img.size, img.getpixel((0, 0)))
+    diff = ImageChops.difference(img, bg)
+    diff = ImageChops.add(diff, diff)
+    bbox = diff.getbbox()
+    if bbox != (0, 0) + img.size:
+        log.debug(f"Removing uniform border {bbox}")
+        return img.crop(bbox)
+    return img
 
 
 def vectorize(arr):
