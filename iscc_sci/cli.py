@@ -1,5 +1,6 @@
 import argparse
 import glob
+import json
 from pathlib import Path
 from loguru import logger
 import iscc_sci as sci
@@ -17,6 +18,10 @@ def main():
         "-b", "--bits", type=int, default=256, help="Bit-Length of Code (default 256)"
     )
 
+    parser.add_argument(
+        "-e", "--embedding", action="store_true", help="Include image embedding vector in output"
+    )
+
     parser.add_argument("-d", "--debug", action="store_true", help="Show debugging messages.")
     args = parser.parse_args()
 
@@ -31,8 +36,11 @@ def main():
         path = Path(path)
         if path.is_file():
             logger.debug(f"Processing {path.name}")
-            sci_meta = sci.code_image_semantic(path, bits=args.bits)
-            print(sci_meta["iscc"])
+            sci_meta = sci.code_image_semantic(path, bits=args.bits, embedding=args.embedding)
+            if args.embedding:
+                print(json.dumps(sci_meta, indent=2))
+            else:
+                print(sci_meta["iscc"])
 
 
 if __name__ == "__main__":  # pragma: no cover
