@@ -33,12 +33,14 @@ def test_gen_image_code_semantic_invalid_shape():
 
 
 def test_gen_image_code_semantic_invalid_bits():
+    from pydantic import ValidationError
+
     # Test with invalid bit length (not multiple of 32)
-    with pytest.raises(ValueError, match="Invalid bitlength"):
+    with pytest.raises(ValidationError):
         sci.gen_image_code_semantic(np.zeros((1, 3, 512, 512), dtype=np.float32), bits=33)
 
     # Test with invalid bit length (less than 32)
-    with pytest.raises(ValueError, match="Invalid bitlength"):
+    with pytest.raises(ValidationError):
         sci.gen_image_code_semantic(np.zeros((1, 3, 512, 512), dtype=np.float32), bits=16)
 
 

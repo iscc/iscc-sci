@@ -39,6 +39,7 @@ onnxruntime-gpu = { version = "*", optional = true }
 loguru = "*"
 blake3 = "*"
 platformdirs = "*"
+pydantic-settings = "*"
 
 [tool.poetry.extras]
 gpu = ["onnxruntime-gpu"]

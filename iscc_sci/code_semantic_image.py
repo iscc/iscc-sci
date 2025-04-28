@@ -2,7 +2,7 @@ from PIL.Image import Resampling
 from loguru import logger as log
 from base64 import b32encode
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Any
 from PIL import Image, ImageOps, ImageChops
 import numpy as np
 import onnxruntime as rt
@@ -32,64 +32,63 @@ BIT_LEN_MAP = {
 _model = None
 
 
-def code_image_semantic(fp, bits=64):
-    # type: (str|Path, int) -> dict
+def code_image_semantic(fp, **options):
+    # type: (str|Path, Any) -> dict
     """
-    Generate ISCC Semantic-Code Image from image file.
+    Generate ISCC Semantic-Code Image from an image file.
 
     :param str|Path fp: Image filepath used for Semantic-Code creation.
-    :param int bits: Bit-length of ISCC Semantic-Code Image (default 64, max 256).
+    :key bits (int): Bit-length of ISCC Semantic-Code Image (default 64, max 256).
     :return: ISCC metadata - `{"iscc": ..., "features": ...}`
     :rtype: dict
     """
     image = Image.open(fp)
     arr = preprocess_image(image)
-    iscc_meta = gen_image_code_semantic(arr, bits=bits)
+    iscc_meta = gen_image_code_semantic(arr, **options)
     return iscc_meta
 
 
-def gen_image_code_semantic(arr, bits=64):
-    # type: (NDArray[np.float32], int) -> dict
+def gen_image_code_semantic(arr, **options):
+    # type: (NDArray[np.float32], Any) -> dict
     """
-    Create an ISCC Semantic-Code Image from normalized image array.
+    Create an ISCC Semantic-Code Image from a normalized image array.
 
     :param NDArray[np.float32] arr: Normalized image array with shape (1, 3, 224, 224)
-    :param int bits: Bit-length of ISCC Semantic-Code Image (default 64, max 256).
+    :key bits (int): Bit-length of ISCC Semantic-Code Image (default 64, max 256).
     :return: ISCC Schema compatible dict with Semantic-Code Image.
     :rtype: dict
     """
     if arr.shape != (1, 3, 512, 512):
         raise ValueError("Array must have shape (1, 3, 512, 512)")
 
-    if bits < 32 or bits % 32:
-        raise ValueError(f"Invalid bitlength {bits}")
-
+    opts = sci.sci_opts.override(options)
     mtype = "0001"  # SEMANTIC
     stype = "0001"  # IMAGE
     version = "0000"  # V0
-    length = BIT_LEN_MAP[bits]
+    length = BIT_LEN_MAP[opts.bits]
 
     header = int(mtype + stype + version + length, 2).to_bytes(2, byteorder="big")
-    digest, features = soft_hash_image_semantic(arr, bits=bits)
+    digest, features = soft_hash_image_semantic(arr, **options)
     code = b32encode(header + digest).decode("ascii").rstrip("=")
 
     iscc = "ISCC:" + code
     return {"iscc": iscc, "features": features.tolist()}
 
 
-def soft_hash_image_semantic(arr, bits=64):
-    # type: (NDArray[np.float32], int) -> Tuple[bytes, NDArray[np.float32]]
+def soft_hash_image_semantic(arr, **options):
+    # type: (NDArray[np.float32], Any) -> Tuple[bytes, NDArray[np.float32]]
     """
     Calculate semantic image hash from a preprocessed image array.
 
     :param NDArray[np.float32] arr: Preprocessed image array
-    :param int bits: Bit-length of semantic image hash (default 64).
+    :key bits (int): Bit-length of semantic image hash (default 64).
     :return: Tuple of image-hash digest and semantic feature vector from model.
     """
+    opts = sci.sci_opts.override(options)
     embeddings = vectorize(arr)
     features = embeddings[0][0]
     digest = binarize(features)
-    digest = digest[: bits // 8]
+    digest = digest[: opts.bits // 8]
     return digest, features
 
 
