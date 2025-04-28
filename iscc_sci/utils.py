@@ -1,15 +1,20 @@
 from pathlib import Path
+
+import numpy as np
 from loguru import logger as log
 import time
 from contextlib import contextmanager
 from urllib.request import urlretrieve
 from blake3 import blake3
+from numpy._typing import NDArray
+
 import iscc_sci as sci
 
 
 __all__ = [
     "metrics",
     "get_model",
+    "compress",
 ]
 
 
@@ -61,3 +66,17 @@ def check_integrity(file_path, checksum):
         log.error(msg)
         raise RuntimeError(msg)
     return file_path
+
+
+def compress(vec, precision):
+    # type: (NDArray, int) -> list[float]
+    """
+    Round down vector values to specified precision to reduce storage requirements.
+
+    :param vec: Embedding vector.
+    :param precision: Max number of fractional decimal places.
+    :return: Vector as a native python list of rounded floats.
+    """
+    rounded_array = np.around(vec, decimals=precision)
+    compress_list = [round(x, precision) for x in rounded_array.tolist()]
+    return compress_list

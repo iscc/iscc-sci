@@ -71,8 +71,18 @@ def gen_image_code_semantic(arr, **options):
     digest, features = soft_hash_image_semantic(arr, **options)
     code = b32encode(header + digest).decode("ascii").rstrip("=")
 
-    iscc = "ISCC:" + code
-    return {"iscc": iscc, "features": features.tolist()}
+    result = {"iscc": "ISCC:" + code}  # Initialize first so `iscc` key is "first" in dict
+
+    if opts.embedding:
+        embedding = sci.compress(features.tolist(), opts.precision)
+        feature_set = {
+            "maintype": "semantic",
+            "subtype": "image",
+            "version": 0,
+            "embedding": embedding,
+        }
+        result["features"] = [feature_set]
+    return result
 
 
 def soft_hash_image_semantic(arr, **options):

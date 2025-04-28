@@ -13,11 +13,22 @@ def test_version():
 def test_code_image_semantic_default():
     result = sci.code_image_semantic(images()[0])
     assert result["iscc"] == "ISCC:CEAQ2WTPK2QPZTK4"
+    assert "features" not in result
 
 
 def test_code_image_semantic_256bit():
     result = sci.code_image_semantic(images()[1], bits=256)
     assert result["iscc"] == "ISCC:CEDQ2WT7K2Q7YTO47HLGYUURO2RCI24K5VUZOHFMMY42C6O6VLQ6FEA"
+
+
+def test_code_image_semantic_embedding():
+    result = sci.code_image_semantic(images()[1], embedding=True)
+    assert "features" in result
+    assert result["features"][0]["maintype"] == "semantic"
+    assert result["features"][0]["subtype"] == "image"
+    assert result["features"][0]["version"] == 0
+    assert result["features"][0]["embedding"][0] == -0.05568071
+    assert result["features"][0]["embedding"][-1] == -0.1192412
 
 
 def test_gen_image_code_semantic(img_array):
