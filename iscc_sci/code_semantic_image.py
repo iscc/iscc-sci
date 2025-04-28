@@ -39,6 +39,8 @@ def code_image_semantic(fp, **options):
 
     :param str|Path fp: Image filepath used for Semantic-Code creation.
     :key bits (int): Bit-length of ISCC Semantic-Code Image (default 64, max 256).
+    :key embedding (bool): Add image embedding vector to ISCC metadata (default False).
+    :key precision (int): Max fractional digits for embeddings (default 8).
     :return: ISCC metadata - `{"iscc": ..., "features": ...}`
     :rtype: dict
     """
@@ -55,6 +57,8 @@ def gen_image_code_semantic(arr, **options):
 
     :param NDArray[np.float32] arr: Normalized image array with shape (1, 3, 224, 224)
     :key bits (int): Bit-length of ISCC Semantic-Code Image (default 64, max 256).
+    :key embedding (bool): Add image embedding vector to ISCC metadata (default False).
+    :key precision (int): Max fractional digits for embeddings (default 8).
     :return: ISCC Schema compatible dict with Semantic-Code Image.
     :rtype: dict
     """
@@ -91,7 +95,9 @@ def soft_hash_image_semantic(arr, **options):
     Calculate semantic image hash from a preprocessed image array.
 
     :param NDArray[np.float32] arr: Preprocessed image array
-    :key bits (int): Bit-length of semantic image hash (default 64).
+    :key bits (int): Bit-length of ISCC Semantic-Code Image (default 64, max 256).
+    :key embedding (bool): Add image embedding vector to ISCC metadata (default False).
+    :key precision (int): Max fractional digits for embeddings (default 8).
     :return: Tuple of image-hash digest and semantic feature vector from model.
     """
     opts = sci.sci_opts.override(options)
