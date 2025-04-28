@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2025-04-28
 
 - Added support for configurable bit-length (32 to 256 bits)
 - Improved image preprocessing with better handling of transparency and uniform borders
