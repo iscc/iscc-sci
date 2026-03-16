@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] - 2026-03-16
+
+- Renamed CLI command from `sci` to `iscc-sci`
+- Migrated build system from poetry to uv
+- Added Python 3.14 support, dropped Python 3.9 and 3.10
+- Rewrote CLI tests for 100% code coverage
+
 ## [0.2.0] - 2025-04-28
 
 - Added support for configurable bit-length (32 to 256 bits)
