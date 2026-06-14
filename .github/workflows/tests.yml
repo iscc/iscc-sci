@@ -2,10 +2,24 @@ name: Tests
 on:
   push:
   pull_request:
-  release:
-    types: [created]
+  workflow_call:  # invoked by release.yml to gate publishing on a green test run
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.13'
+
+      - name: Install Quality-Gate Tooling
+        run: uv sync --only-group dev
+
+      - name: Run Quality Gates
+        run: uv run --no-sync prek run --all-files --show-diff-on-failure
+
   tests:
     strategy:
       fail-fast: false
