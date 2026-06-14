@@ -127,14 +127,14 @@ def preprocess_image(image):
         # Transpose the image according to its orientation tag (if available).
         image = ImageOps.exif_transpose(image)
 
+        # Convert to RGB and add a white background if the image contains transparency.
+        image = remove_transparency(image)
+
         # Crop uniformly colored borders if applicable.
         image = trim_border(image)
 
         # Resize the image
         image = image.resize((512, 512), Resampling.BILINEAR)
-
-        # Convert to RGB and add a white background if the image contains transparency.
-        image = remove_transparency(image)
 
         # Convert to a numpy array and ensure type consistency
         image = np.array(image, dtype=np.float32)
