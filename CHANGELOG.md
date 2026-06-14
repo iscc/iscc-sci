@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] - 2026-06-14
+
+- Aligned `preprocess_image` preflight order with IEP-0004 (remove transparency before trimming borders)
+
 ## [0.2.1] - 2026-03-16
 
 - Renamed CLI command from `sci` to `iscc-sci`

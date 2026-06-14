@@ -232,7 +232,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/0f/56/6dd2dbe4cbef0e680
 
 [[package]]
 name = "iscc-sci"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "blake3" },

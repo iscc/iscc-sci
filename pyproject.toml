@@ -1,6 +1,6 @@
 [project]
 name = "iscc-sci"
-version = "0.2.0"
+version = "0.3.0"
 description = "ISCC - Semantic Code Image"
 authors = [{ name = "Titusz", email = "tp@py7.de" }]
 requires-python = ">=3.11"
