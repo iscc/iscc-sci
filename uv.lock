@@ -1,6 +1,13 @@
 version = 1
 revision = 3
 requires-python = ">=3.11"
+conflicts = [[
+    { package = "iscc-sci", extra = "cpu" },
+    { package = "iscc-sci", extra = "gpu" },
+], [
+    { package = "iscc-sci", extra = "gpu" },
+    { package = "iscc-sci", group = "test" },
+]]
 
 [[package]]
 name = "annotated-types"
@@ -16,7 +23,7 @@ name = "blake3"
 version = "1.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12' or (extra == 'extra-8-iscc-sci-cpu' and extra == 'extra-8-iscc-sci-gpu') or (extra == 'extra-8-iscc-sci-gpu' and extra == 'group-8-iscc-sci-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/75/aa/abcd75e9600987a0bc6cfe9b6b2ff3f0e2cb08c170addc6e76035b5c4cb3/blake3-1.0.8.tar.gz", hash = "sha256:513cc7f0f5a7c035812604c2c852a0c1468311345573de647e310aca4ab165ba", size = 117308, upload-time = "2025-10-14T06:47:48.83Z" }
 wheels = [
@@ -237,13 +244,15 @@ source = { editable = "." }
 dependencies = [
     { name = "blake3" },
     { name = "loguru" },
-    { name = "onnxruntime" },
     { name = "pillow" },
     { name = "platformdirs" },
     { name = "pydantic-settings" },
 ]
 
 [package.optional-dependencies]
+cpu = [
+    { name = "onnxruntime" },
+]
 gpu = [
     { name = "onnxruntime-gpu" },
 ]
@@ -261,6 +270,7 @@ docs = [
 test = [
     { name = "coverage" },
     { name = "iscc-samples" },
+    { name = "onnxruntime" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
@@ -269,13 +279,13 @@ test = [
 requires-dist = [
     { name = "blake3" },
     { name = "loguru" },
-    { name = "onnxruntime" },
+    { name = "onnxruntime", marker = "extra == 'cpu'" },
     { name = "onnxruntime-gpu", marker = "extra == 'gpu'" },
     { name = "pillow" },
     { name = "platformdirs" },
     { name = "pydantic-settings" },
 ]
-provides-extras = ["gpu"]
+provides-extras = ["cpu", "gpu"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -290,6 +300,7 @@ docs = [
 test = [
     { name = "coverage" },
     { name = "iscc-samples" },
+    { name = "onnxruntime" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
@@ -299,8 +310,8 @@ name = "loguru"
 version = "0.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-    { name = "win32-setctime", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-iscc-sci-cpu' and extra == 'extra-8-iscc-sci-gpu') or (extra == 'extra-8-iscc-sci-gpu' and extra == 'group-8-iscc-sci-test')" },
+    { name = "win32-setctime", marker = "sys_platform == 'win32' or (extra == 'extra-8-iscc-sci-cpu' and extra == 'extra-8-iscc-sci-gpu') or (extra == 'extra-8-iscc-sci-gpu' and extra == 'group-8-iscc-sci-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3a/05/a1dae3dffd1116099471c643b8924f5aa6524411dc6c63fdae648c4f1aca/loguru-0.7.3.tar.gz", hash = "sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6", size = 63559, upload-time = "2024-12-06T11:20:56.608Z" }
 wheels = [
@@ -845,7 +856,7 @@ name = "pytest-cov"
 version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "coverage", extra = ["toml"] },
+    { name = "coverage", extra = ["toml"], marker = "extra == 'extra-8-iscc-sci-cpu' or extra != 'extra-8-iscc-sci-gpu' or (extra == 'extra-8-iscc-sci-gpu' and extra == 'group-8-iscc-sci-test')" },
     { name = "pluggy" },
     { name = "pytest" },
 ]

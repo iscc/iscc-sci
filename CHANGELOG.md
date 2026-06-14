@@ -7,6 +7,7 @@
 - Added Python 3.14 support, dropped Python 3.9 and 3.10
 - Rewrote CLI tests for 100% code coverage
 - Aligned `preprocess_image` preflight order with IEP-0004 (remove transparency before trimming borders)
+- Enabled GPU inference: select the ONNX runtime via exclusive `cpu`/`gpu` extras and request the CUDA execution provider in `model()` (`pip install iscc-sci` no longer bundles a runtime — install `iscc-sci[cpu]` or `iscc-sci[gpu]`)
 
 ## [0.2.0] - 2025-04-28
 

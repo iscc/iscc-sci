@@ -33,12 +33,24 @@ perceptual Image-Code.
 
 ## Installation
 
-Before you can install `iscc-sci`, you need to have Python 3.8 or newer installed on your system.
-Install the library as any other python package:
+Ensure you have Python 3.11 or newer installed on your system. The package requires an ONNX runtime
+that is selected via install extras. For CPU inference (works everywhere):
 
 ```bash
-pip install iscc-sci
+pip install "iscc-sci[cpu]"
 ```
+
+For NVIDIA CUDA accelerated inference (requires CUDA 12.x and cuDNN 9.x):
+
+```bash
+pip install "iscc-sci[gpu]"
+```
+
+> [!NOTE]
+> Install exactly **one** of the `cpu`/`gpu` extras. The underlying `onnxruntime` and
+> `onnxruntime-gpu` packages unpack into the same directory and overwrite each other, so installing
+> both silently disables GPU support. A plain `pip install iscc-sci` installs no ONNX runtime and
+> fails on import with instructions.
 
 ## Usage
 

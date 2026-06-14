@@ -1,13 +1,22 @@
 from PIL.Image import Resampling
 from loguru import logger as log
 from base64 import b32encode
+from importlib.metadata import PackageNotFoundError, distribution
 from pathlib import Path
 from typing import List, Tuple, Any
 from PIL import Image, ImageOps, ImageChops
 import numpy as np
-import onnxruntime as rt
 from numpy.typing import NDArray
 import iscc_sci as sci
+
+try:
+    import onnxruntime as rt
+except ImportError:  # pragma: no cover - depends on which extra was installed
+    raise ImportError(
+        "iscc-sci requires an ONNX runtime. Install exactly one of:\n"
+        '  pip install "iscc-sci[cpu]"  # CPU inference\n'
+        '  pip install "iscc-sci[gpu]"  # NVIDIA CUDA accelerated inference'
+    ) from None
 
 
 __all__ = [
@@ -108,15 +117,51 @@ def soft_hash_image_semantic(arr, **options):
     return digest, features
 
 
+def warn_gpu_shadowed(available_providers):
+    # type: (list[str]) -> None
+    """
+    Warn when onnxruntime-gpu is installed but CUDA support is unavailable.
+
+    Both onnxruntime variant wheels unpack into the same directory, so installing the CPU
+    package alongside onnxruntime-gpu silently disables CUDA support.
+
+    :param available_providers: Providers reported by the installed onnxruntime build.
+    """
+    if "CUDAExecutionProvider" in available_providers:
+        return
+    try:
+        distribution("onnxruntime-gpu")
+    except PackageNotFoundError:
+        return
+    log.warning(
+        "onnxruntime-gpu is installed but CUDA support is unavailable - the onnxruntime CPU "
+        "package likely overwrote the GPU build. To fix run: pip uninstall -y onnxruntime "
+        'onnxruntime-gpu && pip install --force-reinstall "iscc-sci[gpu]"'
+    )
+
+
 def model():
     # type: () -> rt.InferenceSession
     """Initialize, cache and return inference model"""
     global _model
     if _model is None:
         model_path = sci.get_model()
+        available = rt.get_available_providers()
+        log.debug(f"Available ONNX providers {', '.join(available)}")
+        warn_gpu_shadowed(available)
+        providers = ["CPUExecutionProvider"]
+        if "CUDAExecutionProvider" in available:  # pragma: no cover - needs CUDA hardware
+            providers.insert(0, "CUDAExecutionProvider")
+            if hasattr(rt, "preload_dlls"):
+                # Load CUDA/cuDNN libraries from pip-provided nvidia wheels or the system PATH
+                # before session creation (available since onnxruntime 1.21).
+                rt.preload_dlls()
+        log.debug(f"Using ONNX providers {', '.join(providers)}")
+        so = rt.SessionOptions()
+        so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
         log.info(f"Initializing ONNX model for iscc-sci {sci.__version__}")
         with sci.metrics(name="ONNX load time {seconds:.2f} seconds"):
-            _model = rt.InferenceSession(model_path)
+            _model = rt.InferenceSession(model_path, sess_options=so, providers=providers)
     return _model
 
 

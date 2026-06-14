@@ -3,7 +3,8 @@ import pytest
 import iscc_sci as sci
 from iscc_samples import images
 from PIL import Image, ImageChops
-from iscc_sci.code_semantic_image import remove_transparency, trim_border
+from iscc_sci import code_semantic_image as sci_img
+from iscc_sci.code_semantic_image import remove_transparency, trim_border, warn_gpu_shadowed
 
 
 def test_version():
@@ -60,6 +61,37 @@ def test_models():
 
     engine = model()
     assert engine
+
+
+def test_warn_gpu_shadowed_cuda_available(monkeypatch):
+    """CUDA available means no shadowing - no warning."""
+    warnings = []
+    monkeypatch.setattr(sci_img.log, "warning", warnings.append)
+    warn_gpu_shadowed(["CUDAExecutionProvider", "CPUExecutionProvider"])
+    assert warnings == []
+
+
+def test_warn_gpu_shadowed_no_gpu_package(monkeypatch):
+    """onnxruntime-gpu not installed - no warning."""
+    warnings = []
+    monkeypatch.setattr(sci_img.log, "warning", warnings.append)
+
+    def _missing(name):
+        raise sci_img.PackageNotFoundError(name)
+
+    monkeypatch.setattr(sci_img, "distribution", _missing)
+    warn_gpu_shadowed(["CPUExecutionProvider"])
+    assert warnings == []
+
+
+def test_warn_gpu_shadowed_shadowed(monkeypatch):
+    """onnxruntime-gpu installed but CUDA unavailable - warn with fix instructions."""
+    warnings = []
+    monkeypatch.setattr(sci_img.log, "warning", warnings.append)
+    monkeypatch.setattr(sci_img, "distribution", lambda name: object())
+    warn_gpu_shadowed(["CPUExecutionProvider"])
+    assert len(warnings) == 1
+    assert "onnxruntime-gpu" in warnings[0]
 
 
 def test_preprocess_image(img_obj):

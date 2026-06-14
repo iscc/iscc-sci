@@ -33,14 +33,16 @@ classifiers = [
 ]
 dependencies = [
     "pillow",
-    "onnxruntime",
     "loguru",
     "blake3",
     "platformdirs",
     "pydantic-settings",
 ]
 
+# The onnxruntime variant wheels unpack into the same site-packages directory and clobber each
+# other, so exactly one of the cpu/gpu extras must be installed (see issue #3).
 [project.optional-dependencies]
+cpu = ["onnxruntime"]
 gpu = ["onnxruntime-gpu"]
 
 [project.urls]
@@ -56,6 +58,7 @@ test = [
     "coverage",
     "pytest-cov",
     "iscc-samples",
+    "onnxruntime",  # dev/test environments use CPU inference
 ]
 dev = [
     "poethepoet",
@@ -69,6 +72,10 @@ docs = [
 
 [tool.uv]
 default-groups = "all"
+conflicts = [
+    [{ extra = "cpu" }, { extra = "gpu" }],
+    [{ group = "test" }, { extra = "gpu" }],
+]
 
 [tool.uv.build-backend]
 module-root = ""
