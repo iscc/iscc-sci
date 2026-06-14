@@ -79,13 +79,14 @@ content differences.
 ## Development
 
 This is a proof of concept and welcomes contributions to enhance its capabilities, efficiency, and
-compatibility with the broader ISCC ecosystem. For development, you'll need to install the project
-in development mode using [Poetry](https://python-poetry.org).
+compatibility with the broader ISCC ecosystem. For development, install the project with
+[uv](https://docs.astral.sh/uv). The default `uv sync` installs the test group, which provides a CPU
+ONNX runtime:
 
 ```shell
 git clone https://github.com/iscc/iscc-sci.git
 cd iscc-sci
-poetry install
+uv sync
 ```
 
 ## Contributing
