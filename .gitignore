@@ -216,5 +216,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Coding Agents
-.claude/*
-!.claude/skills/
+.claude/
