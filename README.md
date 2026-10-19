@@ -76,6 +76,44 @@ vector that captures the essential characteristics of the image. This vector is 
 produce a Semantic Image-Code that is robust to variations in image presentation but sensitive to
 content differences.
 
+## Model
+
+The model file is downloaded on first use from the
+[iscc-binaries v1.0.0](https://github.com/iscc/iscc-binaries/releases/tag/v1.0.0) release and
+verified against its BLAKE3 checksum:
+
+- **File:** `iscc-sci-v0.1.0-w16.onnx`, 104,790,555 bytes
+- **BLAKE3:** `9f24dd3d0440eaa07adf121b21a1cbd8518fe36048b9d8a72b606d8a6416e8a3`
+- **Input:** 1×3×512×512 RGB, normalized as `(x / 255 - 0.5) / 0.5`
+- **Output:** 256 floats. The Semantic-Code is made of their sign bits.
+
+**Provenance:**
+
+1. **Backbone:** EfficientNetV2-M, trained by Google on ImageNet-21k and fine-tuned on ImageNet-1k
+   ([timm/tf_efficientnetv2_m.in21k_ft_in1k](https://huggingface.co/timm/tf_efficientnetv2_m.in21k_ft_in1k),
+   Apache-2.0).
+1. **Training:** fine-tuned on the 1M DISC21 training images by Shuhei Yokoo (lyakaap) for the
+   Facebook AI Image Similarity Challenge 2021, descriptor track, 1st place
+   ([ISC21-Descriptor-Track-1st](https://github.com/lyakaap/ISC21-Descriptor-Track-1st), report
+   [arXiv 2112.04323](https://arxiv.org/abs/2112.04323)). The weights are MIT licensed, see
+   [LICENSE-MODEL](LICENSE-MODEL).
+1. **Export:** converted to ONNX with the `image-embedding/isc` operator of
+   [Towhee](https://towhee.io/image-embedding/isc) (Apache-2.0).
+1. **Compression:** weights stored as fp16 and cast back to fp32 when the model loads (all maths
+   stays fp32), graph simplified with onnxslim, input fixed to 1×3×512×512. This is the same file
+   the ISCC C2PA demo uses.
+
+**Licence:** the `iscc-sci` code is Apache-2.0 and the model weights are MIT. The DISC21 training
+data is governed by Meta's Image Similarity Dataset License Agreement in the
+[competition rules](https://www.drivendata.org/competitions/79/competition-image-similarity-1-dev/rules/).
+Its clause 2 covers models trained on the data: "Such algorithms, software, machine learning models,
+techniques and technologies may be used for academic and commercial purposes." Commercial use is
+allowed.
+
+The "CC BY-NC 4.0" licence that is sometimes cited for the model belongs to Meta's evaluation code
+repository [facebookresearch/isc2021](https://github.com/facebookresearch/isc2021), not to the
+dataset.
+
 ## Development
 
 This is a proof of concept and welcomes contributions to enhance its capabilities, efficiency, and

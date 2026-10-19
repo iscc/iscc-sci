@@ -20,10 +20,10 @@ __all__ = [
 
 BASE_VERSION = "1.0.0"
 BASE_URL = f"https://github.com/iscc/iscc-binaries/releases/download/v{BASE_VERSION}"
-MODEL_FILENAME = "iscc-sci-v0.1.0.onnx"
+MODEL_FILENAME = "iscc-sci-v0.1.0-w16.onnx"
 MODEL_URL = f"{BASE_URL}/{MODEL_FILENAME}"
 MODEL_PATH = Path(sci.dirs.user_data_dir) / MODEL_FILENAME
-MODEL_CHECKSUM = "af95054d463e4c95de4c099a7947dbc2f3db168507fef25e91e6984a6f32dd3c"
+MODEL_CHECKSUM = "9f24dd3d0440eaa07adf121b21a1cbd8518fe36048b9d8a72b606d8a6416e8a3"
 
 
 @contextmanager

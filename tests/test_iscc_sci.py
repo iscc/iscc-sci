@@ -28,8 +28,8 @@ def test_code_image_semantic_embedding_precision():
     assert result["features"][0]["maintype"] == "semantic"
     assert result["features"][0]["subtype"] == "image"
     assert result["features"][0]["version"] == 0
-    assert result["features"][0]["embedding"][0] == -0.0647
-    assert result["features"][0]["embedding"][-1] == -0.109
+    assert result["features"][0]["embedding"][0] == -0.0646
+    assert result["features"][0]["embedding"][-1] == -0.1089
 
 
 def test_gen_image_code_semantic(img_array):

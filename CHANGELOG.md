@@ -10,6 +10,17 @@
 - `preprocess_image` accepts per-call options, and `code_image_semantic` passes its options on to it
 - **Compatibility:** Semantic-Codes change for images with near-uniform borders (typical for product
   photos on white backgrounds). Use `image_trim_tolerant=False` to get the earlier codes.
+- Switched to the weight-compressed model file `iscc-sci-v0.1.0-w16.onnx` (fp16 weights cast to fp32
+  at load, simplified graph, fixed 1×3×512×512 input): 105 MB instead of 213 MB, loads about 3x
+  faster, inference speed unchanged. It is the same file the ISCC C2PA demo uses.
+- **Compatibility:** the model switch changes a few Semantic-Codes by one or two bits. Of 71 test
+  images, 8 differ in 1 to 2 of 256 bits, and at 64 bits 6 of 71 differ by 1 bit. The 6
+  `iscc-samples` test images keep their codes, and embedding values shift in the fourth decimal.
+- Added a model card (README section "Model") and the MIT licence notice of the model weights
+  (`LICENSE-MODEL`)
+- Removed the contradicting `License :: OSI Approved :: BSD License` classifier (the package licence
+  is `Apache-2.0`)
+- Wheel and sdist now ship `LICENSE` and `LICENSE-MODEL` (PEP 639 `license-files`)
 
 ## [0.3.0] - 2026-06-14
 
