@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0] - Unreleased
+
+- Added a tolerant border trim to image preprocessing, on by default (`image_trim_tolerant`, env
+  `ISCC_SCI_IMAGE_TRIM_TOLERANT`). It crops near-uniform borders (per-channel difference to the
+  top-left pixel of at most 16) instead of only exactly uniform ones and repeats until a pass crops
+  nothing (at most 16 passes). It is identical to the trim of the Image-Code in iscc-sdk 0.9.7, so
+  both codes of an image see the same content.
+- `preprocess_image` accepts per-call options, and `code_image_semantic` passes its options on to it
+- **Compatibility:** Semantic-Codes change for images with near-uniform borders (typical for product
+  photos on white backgrounds). Use `image_trim_tolerant=False` to get the earlier codes.
+
 ## [0.3.0] - 2026-06-14
 
 - Renamed CLI command from `sci` to `iscc-sci`

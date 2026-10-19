@@ -24,6 +24,8 @@ __all__ = [
     "gen_image_code_semantic",
     "soft_hash_image_semantic",
     "preprocess_image",
+    "trim_border",
+    "trim_border_tolerant",
 ]
 
 BIT_LEN_MAP = {
@@ -36,6 +38,9 @@ BIT_LEN_MAP = {
     224: "0110",
     256: "0111",
 }
+
+# Upper bound for repeated tolerant trim passes (guards against crafted nested borders)
+TRIM_MAX_PASSES = 16
 
 # Lazy loaded ONNX model
 _model = None
@@ -50,11 +55,13 @@ def code_image_semantic(fp, **options):
     :key bits (int): Bit-length of ISCC Semantic-Code Image (default 64, max 256).
     :key embedding (bool): Add image embedding vector to ISCC metadata (default False).
     :key precision (int): Max fractional digits for embeddings (default 8).
+    :key image_trim_tolerant (bool): Repeated tolerant crop of near-uniform borders, used instead
+        of the exact crop (default True).
     :return: ISCC metadata - `{"iscc": ..., "features": ...}`
     :rtype: dict
     """
     image = Image.open(fp)
-    arr = preprocess_image(image)
+    arr = preprocess_image(image, **options)
     iscc_meta = gen_image_code_semantic(arr, **options)
     return iscc_meta
 
@@ -165,9 +172,17 @@ def model():
     return _model
 
 
-def preprocess_image(image):
-    # type: (Image.Image) -> NDArray[np.float32]
-    """Preprocess image for inference."""
+def preprocess_image(image, **options):
+    # type: (Image.Image, Any) -> NDArray[np.float32]
+    """
+    Preprocess image for inference.
+
+    :param Image.Image image: Pillow Image Object
+    :key image_trim_tolerant (bool): Repeated tolerant crop of near-uniform borders, used instead
+        of the exact crop (default True).
+    :return: Normalized image array with shape (1, 3, 512, 512)
+    """
+    opts = sci.sci_opts.override(options)
     with sci.metrics(name="Image preprocessing time {seconds:.4f} seconds"):
         # Transpose the image according to its orientation tag (if available).
         image = ImageOps.exif_transpose(image)
@@ -175,8 +190,8 @@ def preprocess_image(image):
         # Convert to RGB and add a white background if the image contains transparency.
         image = remove_transparency(image)
 
-        # Crop uniformly colored borders if applicable.
-        image = trim_border(image)
+        # Crop near-uniform (tolerant) or uniformly (exact) colored borders if applicable.
+        image = trim_border_tolerant(image) if opts.image_trim_tolerant else trim_border(image)
 
         # Resize the image
         image = image.resize((512, 512), Resampling.BILINEAR)
@@ -240,6 +255,50 @@ def trim_border(img):
         log.debug(f"Removing uniform border {bbox}")
         return img.crop(bbox)
     return img
+
+
+def trim_border_tolerant(img, tolerance=16):
+    # type: (Image.Image, int) -> Image.Image
+    """Trim near-uniform colored borders repeatedly until stable.
+
+    Each pass takes the upper left pixel as reference for border color and crops to the bounding
+    box of all pixels where any RGB channel differs from the reference by more than `tolerance`.
+    Passes repeat until a pass crops nothing (no pixel differs or the bounding box covers the
+    whole image), or at most `TRIM_MAX_PASSES` times.
+
+    :param img: Pillow Image Object
+    :param tolerance: Maximum per-channel difference (0-255) of a border pixel to the reference
+    :return: Image with near-uniform colored borders removed.
+    """
+    # "RGB" and "L" give the same mask directly, other modes are compared in RGB
+    mask_img = img if img.mode in ("RGB", "L") else img.convert("RGB")
+    for passes in range(TRIM_MAX_PASSES):
+        bbox = border_bbox(mask_img, tolerance)
+        if bbox is None or bbox == (0, 0) + mask_img.size:
+            break
+        img, mask_img = img.crop(bbox), mask_img.crop(bbox)
+    else:
+        passes = TRIM_MAX_PASSES
+    if passes:
+        log.debug(f"Removing near-uniform border ({passes} passes)")
+    return img
+
+
+def border_bbox(img, tolerance):
+    # type: (Image.Image, int) -> tuple[int, int, int, int] | None
+    """Bounding box of pixels that differ from the upper left pixel by more than `tolerance`.
+
+    A pixel counts as different if any of its channels differs by more than `tolerance`.
+
+    :param img: Pillow Image Object in mode "RGB" or "L"
+    :param tolerance: Maximum per-channel difference (0-255) of a border pixel to the reference
+    :return: Bounding box (left, upper, right, lower) or None if no pixel differs.
+    """
+    ref = img.getpixel((0, 0))
+    ref = ref if isinstance(ref, tuple) else (ref,)
+    # Per-band lookup table maps values within tolerance of the reference to 0
+    lut = [255 if abs(v - c) > tolerance else 0 for c in ref for v in range(256)]
+    return img.point(lut).getbbox()
 
 
 def vectorize(arr):

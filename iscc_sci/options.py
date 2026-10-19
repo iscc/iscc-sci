@@ -29,6 +29,12 @@ class SciOptions(BaseSettings):
         8, description="ISCC_SCI_PRECISION - Max fractional digits for embeddings (default 8)"
     )
 
+    image_trim_tolerant: bool = Field(
+        True,
+        description="ISCC_SCI_IMAGE_TRIM_TOLERANT - Repeated tolerant crop of near-uniform borders, "
+        "used instead of the exact crop (default True)",
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
