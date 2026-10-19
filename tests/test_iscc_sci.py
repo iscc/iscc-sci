@@ -8,7 +8,7 @@ from iscc_sci.code_semantic_image import remove_transparency, trim_border, warn_
 
 
 def test_version():
-    assert sci.__version__ == "0.3.0"
+    assert sci.__version__ == "0.4.0"
 
 
 def test_code_image_semantic_default():

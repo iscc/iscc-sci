@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.0] - Unreleased
+## [0.4.0] - 2026-10-19
 
 - Added a tolerant border trim to image preprocessing, on by default (`image_trim_tolerant`, env
   `ISCC_SCI_IMAGE_TRIM_TOLERANT`). It crops near-uniform borders (per-channel difference to the
