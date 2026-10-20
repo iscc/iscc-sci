@@ -1,5 +1,7 @@
 """Tests for the repeated tolerant border trim and the `image_trim_tolerant` option."""
 
+import io
+
 import numpy as np
 import pytest
 from iscc_samples import images
@@ -17,20 +19,33 @@ SUBJECT = (60, 90, 120)
 DETAIL = (150, 170, 190)
 
 
-def oracle_pass(img):
-    """Single tolerant trim pass computed with numpy (independent reference implementation)."""
+def oracle_pass(img, flat_check=True, tolerance=16):
+    """Single tolerant trim pass computed with numpy (independent reference implementation).
+
+    With `flat_check` a pass that cuts only one side is skipped unless every removed pixel is
+    within half the tolerance of the reference in all channels (rule C8). Without it the pass
+    follows the 0.4.0 rule.
+    """
     a = np.asarray(img.convert("RGB"), dtype=np.int16)
-    keep = (np.abs(a - a[0, 0]) > 16).any(axis=2)
+    diff = np.abs(a - a[0, 0]).max(axis=2)
+    keep = diff > tolerance
     if not keep.any():
         return img
     rows, cols = np.flatnonzero(keep.any(axis=1)), np.flatnonzero(keep.any(axis=0))
-    return img.crop((cols[0], rows[0], cols[-1] + 1, rows[-1] + 1))
+    top, bottom, left, right = rows[0], rows[-1] + 1, cols[0], cols[-1] + 1
+    h, w = keep.shape
+    sides = sum(int(cut) for cut in (left > 0, top > 0, right < w, bottom < h))
+    removed = np.ones_like(keep)
+    removed[top:bottom, left:right] = False
+    if flat_check and sides == 1 and diff[removed].max() > tolerance // 2:
+        return img
+    return img.crop((left, top, right, bottom))
 
 
-def oracle(img):
+def oracle(img, flat_check=True, tolerance=16):
     """Reference tolerant trim: single numpy pass repeated until stable or 16 passes."""
     for _ in range(16):
-        out = oracle_pass(img)
+        out = oracle_pass(img, flat_check, tolerance)
         if out.size == img.size:
             return out
         img = out
@@ -222,3 +237,112 @@ def test_code_image_semantic_per_call_option(tmp_path, monkeypatch):
     assert exact != tolerant
     monkeypatch.setattr(sci.sci_opts, "image_trim_tolerant", False)
     assert sci.code_image_semantic(fp)["iscc"] == exact
+
+
+def texture(h, w, seed=0):
+    """Random texture array (values 40-200) that keeps every row and column busy."""
+    return np.random.default_rng(seed).integers(40, 200, (h, w, 3))
+
+
+def to_image(a):
+    """Convert a numeric array to an RGB image, clipping values to 0-255."""
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGB")
+
+
+def jpeg(img, quality=75):
+    """Round-trip an image through JPEG compression."""
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=quality)
+    return Image.open(buf).convert("RGB")
+
+
+def sky_image(noise=0):
+    """400x300 landscape: vertical sky gradient 230 to 120 on top, texture on the bottom half."""
+    a = np.zeros((300, 400, 3))
+    a[:150] = np.linspace(230, 120, 150)[:, None, None]
+    a[150:] = texture(150, 400)
+    a += np.random.default_rng(3).normal(0, noise, a.shape) if noise else 0
+    return to_image(a)
+
+
+def ramp_image():
+    """256x100 horizontal ramp from 0 to 255."""
+    return to_image(np.broadcast_to(np.arange(256)[None, :, None], (100, 256, 3)))
+
+
+def caption_image():
+    """Textured 300x260 image with a flat 40 px white caption bar on top."""
+    a = np.full((300, 300, 3), 255.0)
+    a[40:] = texture(260, 300)
+    return to_image(a)
+
+
+def flat_band_gradient():
+    """30 rows of flat 250, then a vertical gradient from 225 down to 100."""
+    a = np.zeros((200, 200, 3))
+    a[:30] = 250
+    a[30:] = np.linspace(225, 100, 170)[:, None, None]
+    return to_image(a)
+
+
+@pytest.mark.parametrize(
+    "img",
+    [sky_image(), sky_image(noise=3), jpeg(sky_image(noise=3))],
+    ids=["plain", "noise", "noise-jpeg"],
+)
+def test_trim_tolerant_keeps_sky_gradient(img):
+    assert trim_border_tolerant(img).size == (400, 300)
+    assert trim_border_tolerant(img).size == oracle(img).size
+
+
+def test_trim_tolerant_sky_gradient_cut_by_040_rule():
+    assert oracle(sky_image(), flat_check=False).size == (400, 150)
+
+
+def test_trim_tolerant_keeps_ramp():
+    img = ramp_image()
+    assert trim_border_tolerant(img).size == (256, 100)
+    assert oracle(img, flat_check=False).size == (1, 100)
+
+
+def test_trim_tolerant_cuts_flat_caption_bar():
+    img = caption_image()
+    result = trim_border_tolerant(img)
+    assert result.size == (300, 260)
+    assert np.array_equal(pixels(result), pixels(oracle(img)))
+
+
+def test_trim_tolerant_cuts_flat_caption_bar_jpeg():
+    img = jpeg(caption_image())
+    result = trim_border_tolerant(img)
+    # JPEG ringing next to the texture keeps the last rows of the bar (as with the 0.4.0 rule)
+    assert result.width == 300
+    assert 260 < result.height <= 270
+    assert np.array_equal(pixels(result), pixels(oracle(img)))
+
+
+@pytest.mark.parametrize("frame", [0, 20])
+def test_trim_tolerant_product_on_white_still_cropped(frame):
+    img = pad(noisy_product(), frame, (0, 0, 0))
+    assert trim_border_tolerant(img).size == (150, 100)
+
+
+def test_trim_tolerant_cuts_only_flat_band_before_gradient():
+    img = flat_band_gradient()
+    result = trim_border_tolerant(img)
+    assert result.size == (200, 170)
+    assert np.array_equal(pixels(result), pixels(oracle(img)))
+
+
+@pytest.mark.parametrize("tolerance", [4, 8, 16, 32])
+def test_trim_tolerant_keeps_ramp_at_any_tolerance(tolerance):
+    img = ramp_image()
+    assert trim_border_tolerant(img, tolerance).size == (256, 100)
+    assert oracle(img, tolerance=tolerance).size == (256, 100)
+
+
+@pytest.mark.parametrize("tolerance", [4, 8, 32])
+def test_trim_tolerant_other_tolerances_match_oracle(tolerance):
+    for img in (flat_band_gradient(), caption_image(), pad(noisy_product(), 20, (0, 0, 0))):
+        result = trim_border_tolerant(img, tolerance)
+        assert np.array_equal(pixels(result), pixels(oracle(img, tolerance=tolerance)))

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1] - Unreleased
+
+- The tolerant border trim keeps smooth gradients: a pass that cuts only one side must remove a flat
+  band (no pixel differs from the reference by more than half the tolerance), otherwise trimming
+  stops. The 0.4.0 trim walked down gradients such as skies about 16 levels per pass and could crop
+  a landscape to its lower half. Crops are identical to iscc-sdk 0.9.7.
+- **Compatibility:** Semantic-Codes change for images with one-sided gradient borders (iscc-sdk
+  Image-Codes change the same way)
+
 ## [0.4.0] - 2026-10-19
 
 - Added a tolerant border trim to image preprocessing, on by default (`image_trim_tolerant`, env
