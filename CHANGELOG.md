@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.1] - Unreleased
+## [0.4.1] - 2026-10-20
 
 - The tolerant border trim keeps smooth gradients: a pass that cuts only one side must remove a flat
   band (no pixel differs from the reference by more than half the tolerance), otherwise trimming
